@@ -1,0 +1,171 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(to right, #dbeafe, #e0f2fe);
+  margin: 0;
+  padding: 40px 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+#app {
+  background-color: white;
+  width: 100%;
+  max-width: 650px;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  padding: 30px 40px;
+  box-sizing: border-box;
+}
+
+h1 {
+  text-align: center;
+  color: #1e3a8a;
+  margin-bottom: 20px;
+}
+
+h3 {
+  color: #111827;
+}
+
+label {
+  display: block;
+  background: #f1f5f9;
+  padding: 10px 15px;
+  border-radius: 8px;
+  margin: 10px 0;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+label:hover {
+  background: #e2e8f0;
+}
+
+input[type="radio"] {
+  margin-right: 10px;
+}
+
+/* Input Area - Mic + Text + Send */
+.input-area {
+  display: flex;
+  align-items: center;
+  margin-top: 20px;
+  border: 1px solid #cbd5e1;
+  border-radius: 25px;
+  padding: 5px 10px;
+  background-color: #f8fafc;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+#text-answer {
+  border: none;
+  outline: none;
+  flex: 1;
+  padding: 10px;
+  font-size: 16px;
+  background: transparent;
+}
+
+/* Icon buttons for mic & send */
+#mic-btn,
+#send-btn {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  padding: 4px;
+  transition: background-color 0.2s ease;
+}
+
+#mic-btn:hover,
+#send-btn:hover {
+  background-color: #e0f2fe;
+}
+
+#mic-btn svg,
+#send-btn svg {
+  width: 20px;
+  height: 20px;
+  fill: #3b82f6;
+}
+
+/* Compact circular NEXT button */
+/* Updated Next button style */
+#next-btn {
+  margin: 20px auto 0;
+  display: block;
+  width: 120px;           /* rectangular width */
+  height: 40px;           /* rectangular height */
+  border-radius: 8px;     /* rounded corners */
+  font-size: 16px;
+  background-color: #1e40af; /* navy blue */
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+  text-align: center;
+  line-height: 40px;      /* vertically center text */
+}
+
+#next-btn:hover {
+  background-color: #1e3a8a; /* slightly lighter navy on hover */
+}
+
+#spoken-text {
+  margin-top: 12px;
+  font-style: italic;
+  color: #475569;
+}
+
+#result-box {
+  text-align: center;
+  margin-top: 25px;
+}
+
+#result-box h2 {
+  color: #1e40af;
+}
+#mic-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 8px;
+}
+
+.dots {
+  font-size: 18px;
+  color: #3b82f6;
+  animation: blink 1s infinite;
+  margin-top: 2px;
+}
+
+@keyframes blink {
+  0% { opacity: 0.2; }
+  50% { opacity: 1; }
+  100% { opacity: 0.2; }
+}
+.progress-bar-wrapper {
+  background-color: #e5e7eb;
+  border-radius: 10px;
+  width: 100%;
+  height: 20px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(to right, #1e3a8a, #3b82f6);
+  border-radius: 10px 0 0 10px;
+  transition: width 0.4s ease;
+}
