@@ -46,8 +46,10 @@ document.getElementById('next-btn').onclick = () => {
   const textAnswer = document.getElementById('text-answer').value.trim();
 
   if (selected) {
-    answers.push(parseInt(selected.value));
+    // If user selected an option, push the numeric value as string (for compatibility)
+    answers.push(selected.value);
   } else if (textAnswer !== "") {
+    // If user typed free text, push as is
     answers.push(textAnswer);
   } else {
     alert("Please select or type an answer.");
@@ -59,7 +61,7 @@ document.getElementById('next-btn').onclick = () => {
   if (current < questions.length) {
     showQuestion();
   } else {
-    // Step 4: Submit answers
+    // Step 4: Submit all answers (mixed numeric & free-text) to backend for LLM analysis
     fetch('http://localhost:3000/score', {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -74,20 +76,20 @@ document.getElementById('next-btn').onclick = () => {
       document.getElementById('send-btn').style.display = "none";
       document.getElementById('mic-btn').style.display = "none";
 
-     const score = result.total;
-const severity = result.result;
+      const score = result.total;
+      const severity = result.result;
 
-document.getElementById('result-box').innerHTML = `
-  <hr style="margin-top: 20px; margin-bottom: 20px; border: 1px solid #cbd5e1;">
-
-  <h2>Your Score: ${score} / 27</h2>
-  <div class="progress-bar-wrapper">
-    <div class="progress-bar" style="width: ${(score / 27) * 100}%;"></div>
-  </div>
-
-  <p style="margin-top: 10px; font-weight: 500;">Severity Level: <strong>${severity}</strong></p>
-`;
-
+      document.getElementById('result-box').innerHTML = `
+        <hr style="margin-top: 20px; margin-bottom: 20px; border: 1px solid #cbd5e1;">
+        <h2>Your Score: ${score} / 27</h2>
+        <div class="progress-bar-wrapper" style="width: 100%; height: 14px; background: #e5e7eb; border-radius: 10px; overflow: hidden; margin: 10px 0;">
+          <div class="progress-bar" style="width: ${(score / 27) * 100}%; height: 100%; background: #3b82f6;"></div>
+        </div>
+        <p style="margin-top: 10px; font-weight: 500;">Severity Level: <strong>${severity}</strong></p>
+      `;
+    })
+    .catch(e => {
+      alert("Error processing your answers: " + e.message);
     });
   }
 };
@@ -115,20 +117,11 @@ document.getElementById('mic-btn').onclick = () => {
   recognition.start();
 
   recognition.onresult = (event) => {
-    const transcript = event.results[0][0].transcript.toLowerCase();
+    const transcript = event.results[0][0].transcript;
 
-    // Show transcript and fill input field
+    // Show transcript and fill input field for free text input
     document.getElementById('spoken-text').textContent = "You said: " + transcript;
-    //document.getElementById('text-answer').value = transcript;
-
-    // Auto-check PHQ-9 options if matching
-    const options = document.getElementsByName("option");
-    if (options.length) {
-      if (transcript.includes("not at all")) options[0].checked = true;
-      else if (transcript.includes("several")) options[1].checked = true;
-      else if (transcript.includes("more than")) options[2].checked = true;
-      else if (transcript.includes("nearly")) options[3].checked = true;
-    }
+    document.getElementById('text-answer').value = transcript;
 
     micDots.style.display = 'none'; // Hide dots after result
   };
