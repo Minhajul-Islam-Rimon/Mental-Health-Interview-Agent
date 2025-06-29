@@ -1,47 +1,92 @@
 module.exports = [
   {
     id: 1,
-    question: "Over the last 2 weeks, how often have you felt little interest or pleasure in doing things?",
-    options: ["Not at all", "Several days", "More than half the days", "Nearly every day"]
+    question: "Lately, have you felt down, sad, or hopeless more often than usual?",
+    options: [
+      "Not at all",
+      "Several days",
+      "More than half the days",
+      "Nearly every day"
+    ]
   },
   {
     id: 2,
-    question: "Over the last 2 weeks, how often have you been feeling down, depressed, or hopeless?",
-    options: ["Not at all", "Several days", "More than half the days", "Nearly every day"]
+    question: "Have you been losing interest or joy in things you usually enjoy?",
+    options: [
+      "Not at all",
+      "Several days",
+      "More than half the days",
+      "Nearly every day"
+    ]
   },
   {
     id: 3,
-    question: "Over the last 2 weeks, how often have you had trouble falling or staying asleep, or sleeping too much?",
-    options: ["Not at all", "Several days", "More than half the days", "Nearly every day"]
+    question: "How often do you feel trouble sleeping or sleeping too much?",
+    options: [
+      "Not at all",
+      "Several days",
+      "More than half the days",
+      "Nearly every day"
+    ]
   },
   {
     id: 4,
-    question: "Over the last 2 weeks, how often have you felt tired or had little energy?",
-    options: ["Not at all", "Several days", "More than half the days", "Nearly every day"]
+    question: "Do you feel tired or low on energy lately?",
+    options: [
+      "Not at all",
+      "Several days",
+      "More than half the days",
+      "Nearly every day"
+    ]
   },
   {
     id: 5,
-    question: "Over the last 2 weeks, how often have you had poor appetite or been overeating?",
-    options: ["Not at all", "Several days", "More than half the days", "Nearly every day"]
+    question: "Have you had a hard time eating—either too little or too much?",
+    options: [
+      "Not at all",
+      "Several days",
+      "More than half the days",
+      "Nearly every day"
+    ]
   },
   {
     id: 6,
-    question: "Over the last 2 weeks, how often have you felt bad about yourself — or that you are a failure or have let yourself or your family down?",
-    options: ["Not at all", "Several days", "More than half the days", "Nearly every day"]
+    question: "Do you feel bad about yourself or feel like a failure lately?",
+    options: [
+      "Not at all",
+      "Several days",
+      "More than half the days",
+      "Nearly every day"
+    ]
   },
   {
     id: 7,
-    question: "Over the last 2 weeks, how often have you had trouble concentrating on things, such as reading or watching television?",
-    options: ["Not at all", "Several days", "More than half the days", "Nearly every day"]
+    question: "Are you having trouble focusing—like reading or watching TV?",
+    options: [
+      "Not at all",
+      "Several days",
+      "More than half the days",
+      "Nearly every day"
+    ]
   },
   {
     id: 8,
-    question: "Over the last 2 weeks, how often have you been moving or speaking so slowly that other people could have noticed? Or the opposite — being so fidgety or restless that you have been moving a lot more than usual?",
-    options: ["Not at all", "Several days", "More than half the days", "Nearly every day"]
+    question: "Have others noticed you’re moving or speaking more slowly, or maybe more restlessly than usual?",
+    options: [
+      "Not at all",
+      "Several days",
+      "More than half the days",
+      "Nearly every day"
+    ]
   },
   {
     id: 9,
-    question: "Over the last 2 weeks, how often have you had thoughts that you would be better off dead or of hurting yourself in some way?",
-    options: ["Not at all", "Several days", "More than half the days", "Nearly every day"]
+    question: "Have you had thoughts that life might not be worth living?",
+    options: [
+      "Not at all",
+      "Several days",
+      "More than half the days",
+      "Nearly every day"
+    ]
   }
 ];

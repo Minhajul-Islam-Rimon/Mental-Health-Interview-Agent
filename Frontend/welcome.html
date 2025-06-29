@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Welcome | Mental Health Interview</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to bottom right, #e0f2fe, #f0f9ff);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    .container {
+      background: white;
+      padding: 50px 40px;
+      border-radius: 20px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+      animation: fadeIn 0.8s ease-in-out;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      color: #1e293b;
+      margin-bottom: 20px;
+    }
+
+    p {
+      font-size: 1.05rem;
+      color: #475569;
+      margin-bottom: 30px;
+    }
+
+    button {
+      background: #3b82f6;
+      color: white;
+      padding: 12px 28px;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #2563eb;
+    }
+
+    .logo {
+      width: 70px;
+      height: 70px;
+      margin-bottom: 20px;
+      background: #3b82f6;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 2rem;
+      font-weight: bold;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 40px 20px;
+      }
+      h1 {
+        font-size: 1.7rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="logo-svg">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" fill="#3b82f6">
+    <circle cx="32" cy="32" r="30" fill="#bfdbfe"/>
+    <path d="M32 12c-6.6 0-12 5.4-12 12 0 4.5 2.5 8.4 6.2 10.5L25 48l7-5 7 5-1.2-13.5c3.7-2.1 6.2-6 6.2-10.5 0-6.6-5.4-12-12-12z" fill="#2563eb"/>
+  </svg>
+</div>
+
+    <h1>Welcome to MindCare</h1>
+    <p>Your mental well-being matters. This short interview will help assess your current emotional state using the PHQ-9 tool.</p>
+    <button onclick="startInterview()">Start Interview</button>
+  </div>
+
+  <script>
+    function startInterview() {
+      window.location.href = "index.html";
+    }
+  </script>
+
+</body>
+</html>

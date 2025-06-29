@@ -169,3 +169,18 @@ input[type="radio"] {
   border-radius: 10px 0 0 10px;
   transition: width 0.4s ease;
 }
+
+.follow-up {
+  margin-top: 10px;
+  font-style: italic;
+  color: #2563eb;
+  background-color: #e0e7ff;
+  padding: 8px;
+  border-radius: 6px;
+}
+.logo-svg {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
