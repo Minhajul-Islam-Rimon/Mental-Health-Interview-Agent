@@ -9,30 +9,35 @@ app.use(express.json());
 
 const PORT = 3000;
 
-// Helper: Query Ollama LLM
+// Query Ollama to score an answer
 async function queryOllama(question, answer) {
   const prompt = `
-You are a medical assistant scoring answers based on the PHQ-9 depression questionnaire.
+You are an expert evaluator scoring answers to PHQ-9 depression questionnaire items.
 
-Question: "${question}"
-User answer: "${answer}"
+Given the question:
+"${question}"
 
-Respond ONLY with one of the following numbers: 0, 1, 2, or 3.
-Do not include any other text. Just reply with a number.
+And the user's answer:
+"${answer}"
+
+Please respond ONLY with a single digit from 0 to 3 indicating the severity, where:
+0 = Not at all
+1 = Several days
+2 = More than half the days
+3 = Nearly every day
+
+Do not add any explanations or other text. Just respond with the digit.
   `.trim();
 
   try {
     const response = await axios.post('http://localhost:11434/api/chat', {
-      model: 'neural-chat',
+      model: 'llama3',
       stream: false,
       messages: [{ role: 'user', content: prompt }]
     });
 
-    console.log("🧠 Full Ollama API response:", response.data);
-
     const raw = response.data.message?.content?.trim() || '';
-
-    console.log("LLM raw response:", raw);
+    console.log("🔎 LLM raw score response:", raw);
 
     const score = parseInt(raw);
     if ([0, 1, 2, 3].includes(score)) return score;
@@ -40,7 +45,7 @@ Do not include any other text. Just reply with a number.
     const match = raw.match(/[0-3]/);
     if (match) return parseInt(match[0]);
 
-    console.warn("❗ Unexpected LLM score:", raw);
+    console.warn("⚠️ Unexpected LLM response:", raw);
     return 0;
   } catch (err) {
     console.error("❌ Ollama error:", err.message);
@@ -48,92 +53,127 @@ Do not include any other text. Just reply with a number.
   }
 }
 
-// Endpoint: Get all PHQ-9 questions (optional, for reference)
-app.get('/questions', (req, res) => {
-  res.json(phq9);
+// Chat-style conversational endpoint
+app.post('/chat', async (req, res) => {
+  const history = req.body.history;
+  if (!Array.isArray(history)) {
+    return res.status(400).json({ error: "Invalid history format" });
+  }
+
+  // Compassionate system message for empathy/tone moderation
+  const systemMessage = {
+    role: 'system',
+    content: `
+You are a compassionate mental health interviewer conducting a PHQ-9 style depression interview.
+
+- Ask ONE question at a time based on the user's last answer.
+- Use empathetic, warm, and supportive language.
+- Acknowledge the user's feelings respectfully before proceeding.
+- Avoid giving advice, summaries, or commentary.
+- Do NOT simulate or invent user responses.
+- If unsure what to ask next or the interview is complete, respond with "END".
+- If user responses indicate crisis or severe distress, gently suggest seeking immediate professional help and provide support resources.
+- DO NOT include “System:” or “User:” in your message.
+
+Your reply should be ONLY the next question (or "END").
+    `.trim()
+  };
+
+  try {
+    const messages = [systemMessage, ...history];
+    const response = await axios.post('http://localhost:11434/api/chat', {
+      model: 'llama3',
+      stream: false,
+      messages
+    });
+
+    const reply = response.data.message?.content?.trim() || "(No response)";
+    return res.json({ reply });
+  } catch (err) {
+    console.error("❌ Ollama error on chat:", err.message);
+    return res.status(500).json({ error: "LLM request failed" });
+  }
 });
 
-// Endpoint: Provide next question based on conversation history
-app.post('/next-question', async (req, res) => {
-  const history = req.body.history;
-  if (!Array.isArray(history)) return res.status(400).json({ error: "Invalid history format" });
+// Clarification endpoint (moved outside /chat)
+app.post('/clarify', async (req, res) => {
+  const { question, answer } = req.body;
 
-  if (history.length === 0) {
-    return res.json({ question: phq9[0].question });
+  if (!question || !answer) {
+    return res.status(400).json({ error: "Missing question or answer" });
   }
-
-  if (history.length >= phq9.length) {
-    return res.json({ question: null });
-  }
-
-  // Prepare conversation text for prompt
-  const conversationText = history.map((qa, i) =>
-    `Q${i + 1}: ${qa.question}\nA${i + 1}: ${qa.answer}`
-  ).join('\n');
 
   const prompt = `
-You are a medical assistant conducting a PHQ-9 depression interview.
+You are a PHQ-9 interviewer assistant.
 
-Here is the conversation so far:
-${conversationText}
+You just asked this question:
+"${question}"
 
-Based on the answers, suggest the next PHQ-9 style question to ask the user.
+The user responded:
+"${answer}"
 
-Only output the question text. No explanations or extra text.
+Determine if the user's answer is vague, unclear, or needs clarification. If yes, respond with a polite clarifying question like "Could you clarify what you mean?" or something specific to the context.
+
+If the answer is already clear, respond ONLY with "OK".
   `.trim();
 
   try {
     const response = await axios.post('http://localhost:11434/api/chat', {
-      model: 'neural-chat',
+      model: 'llama3',
       stream: false,
       messages: [{ role: 'user', content: prompt }]
     });
 
-    const nextQuestionRaw = response.data.message?.content?.trim() || '';
+    const content = response.data.message?.content?.trim();
+    if (content === "OK") return res.json({ clarification: null });
 
-    // Validate next question text length
-    if (!nextQuestionRaw || nextQuestionRaw.length < 5) {
-      // fallback: return next question from static list
-      return res.json({ question: phq9[history.length].question });
-    }
-
-    return res.json({ question: nextQuestionRaw });
+    return res.json({ clarification: content });
   } catch (err) {
-    console.error("❌ Ollama error on next-question:", err.message);
-    // fallback
-    return res.json({ question: phq9[history.length].question });
+    console.error("❌ Clarify error:", err.message);
+    return res.status(500).json({ error: "Clarification LLM failed" });
   }
 });
 
-// Endpoint: Score all answers and provide result
+// Traditional PHQ-9 scoring route
 app.post('/score', async (req, res) => {
   const answers = req.body.answers;
-  if (!Array.isArray(answers) || answers.length !== phq9.length) {
-    return res.status(400).json({ error: "Invalid or incomplete answers array" });
+
+  if (!Array.isArray(answers) || answers.length === 0) {
+    return res.status(400).json({ error: "Invalid or empty answers array" });
   }
 
   let totalScore = 0;
-  for (let i = 0; i < phq9.length; i++) {
+  let answerCount = Math.min(answers.length, phq9.length);
+
+  console.log(`📋 Starting PHQ-9 scoring with ${answerCount} answers`);
+
+  for (let i = 0; i < answerCount; i++) {
+    let question = phq9[i]?.question || `Question ${i + 1}`;
     let ans = answers[i];
     let score = 0;
 
-    if (typeof ans === 'number' && [0,1,2,3].includes(ans)) {
-      score = ans;
-    } else if (typeof ans === 'string') {
-      // Try to parse string as number
-      const parsed = parseInt(ans);
-      if ([0,1,2,3].includes(parsed)) {
+    if (!ans || typeof ans !== 'string' || ans.trim() === "") {
+      console.warn(`⚠️ Empty or missing answer for Q${i + 1}, assigning score 0`);
+      score = 0;
+    } else {
+      const parsed = parseInt(ans.trim());
+      if ([0, 1, 2, 3].includes(parsed)) {
         score = parsed;
       } else {
-        // Query LLM to score free-text answer
-        score = await queryOllama(phq9[i].question, ans);
+        // Use LLM to score free text
+        score = await queryOllama(question, ans.trim());
+
+        if (![0, 1, 2, 3].includes(score)) {
+          console.warn(`❗ LLM returned invalid score for Q${i + 1}: "${score}". Using 0 as fallback.`);
+          score = 0;
+        }
       }
     }
 
+    console.log(`✅ Q${i + 1}: "${ans}" → Score: ${score}`);
     totalScore += score;
   }
 
-  // Determine severity level
   let severity = "Unknown";
   if (totalScore >= 20) severity = "Severe";
   else if (totalScore >= 15) severity = "Moderately Severe";
@@ -141,54 +181,12 @@ app.post('/score', async (req, res) => {
   else if (totalScore >= 5) severity = "Mild";
   else severity = "Minimal";
 
+  console.log(`🎯 Final Score: ${totalScore} → Severity: ${severity}`);
+
   return res.json({ total: totalScore, result: severity });
 });
 
-// Endpoint: Provide contextual follow-up question
-app.post('/follow-up', async (req, res) => {
-  const { history, lastAnswer } = req.body;
-
-  if (!Array.isArray(history) || typeof lastAnswer !== 'string') {
-    return res.status(400).json({ error: "Invalid request data" });
-  }
-
-  const conversationText = history.map((qa, i) =>
-    `Q${i+1}: ${qa.question}\nA${i+1}: ${qa.answer}`
-  ).join('\n');
-
-  const prompt = `
-You are a compassionate medical assistant conducting a PHQ-9 depression interview.
-
-Conversation so far:
-${conversationText}
-
-Last user answer:
-${lastAnswer}
-
-Provide a gentle, empathetic follow-up question related to the previous discussion.
-Respond ONLY with the follow-up question text, no explanations.
-  `.trim();
-
-  try {
-    const response = await axios.post('http://localhost:11434/api/chat', {
-      model: 'neural-chat',
-      stream: false,
-      messages: [{ role: 'user', content: prompt }]
-    });
-
-    const followUpRaw = response.data.message?.content?.trim() || '';
-
-    if (!followUpRaw || followUpRaw.length < 5) {
-      return res.json({ followUpQuestion: null });
-    }
-
-    return res.json({ followUpQuestion: followUpRaw });
-  } catch (err) {
-    console.error("❌ Ollama error on follow-up:", err.message);
-    return res.json({ followUpQuestion: null });
-  }
-});
-
+// Start the server
 app.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
 });

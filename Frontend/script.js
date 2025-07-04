@@ -1,218 +1,234 @@
+// ✅ Mental Health Interview Chatbot (Full script.js with all features: Step 1–6)
+
+let alreadyScored = false;
+let chatEnded = false;
+let crisisDetected = false;
 let conversationHistory = [];
-let currentQuestion = null;
-let currentQuestionId = 0;
 let currentUtterance = null;
 
-// Show question and options dynamically in #question-box
-function showQuestion(questionText, questionId, options) {
-  questionText = questionText.replace(/^Q\d+:\s*/, '');
-  
-  currentQuestion = questionText;
-  currentQuestionId = questionId;
+const chatWindow = document.getElementById("chat-window");
+const inputBox = document.getElementById("text-answer");
+const micBtn = document.getElementById("mic-btn");
+const sendBtn = document.getElementById("send-btn");
+const listeningDots = document.getElementById("listening-dots");
+const spokenText = document.getElementById("spoken-text");
 
-  const box = document.getElementById('question-box');
-  box.innerHTML = `
-    <h3>Q${questionId + 1}: ${questionText}</h3>
-    <div id="options">
-      ${options.map((opt, i) => `
-        <label>
-          <input type="radio" name="option" value="${i}"/> ${opt}
-        </label><br>
-      `).join('')}
-    </div>
-  `;
+function appendMessage(sender, text) {
+  const msg = document.createElement("div");
+  msg.className = `message ${sender}`;
+  msg.textContent = text;
+  chatWindow.appendChild(msg);
+  chatWindow.scrollTop = chatWindow.scrollHeight;
+}
 
-  // Speak question aloud
+function speakMessage(text, options = {}) {
   if (currentUtterance && window.speechSynthesis.speaking) {
     window.speechSynthesis.cancel();
   }
-  const spokenText = questionText;
-  currentUtterance = new SpeechSynthesisUtterance(spokenText);
+  currentUtterance = new SpeechSynthesisUtterance(text);
   currentUtterance.lang = "en-US";
+  if (options.pitch) currentUtterance.pitch = options.pitch;
+  if (options.rate) currentUtterance.rate = options.rate;
   window.speechSynthesis.speak(currentUtterance);
-
-  // Clear any previous selection
-  const radios = document.querySelectorAll('input[name="option"]');
-  radios.forEach(radio => radio.checked = false);
-
-  // Clear spoken text display and any previous follow-up messages
-  document.getElementById('spoken-text').textContent = '';
-  // Remove any existing follow-up message paragraphs
-  const followUps = document.querySelectorAll('.follow-up');
-  followUps.forEach(el => el.remove());
 }
 
-// Fetch next question from backend, or submit if done
-async function fetchNextQuestion() {
-  try {
-    const res = await fetch('http://localhost:3000/next-question', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ history: conversationHistory })
-    });
-    const data = await res.json();
+function appendHelpButton() {
+  const container = document.createElement("div");
+  container.className = "message system";
+  container.style.marginTop = "10px";
 
-    if (data.question) {
-      const phq9Options = ["Not at all", "Several days", "More than half the days", "Nearly every day"];
-      showQuestion(data.question, conversationHistory.length, phq9Options);
-      document.getElementById('next-btn').disabled = false;
-    } else {
-      // No more questions - submit all answers
-      await submitAnswers();
-    }
-  } catch (err) {
-    alert('Error fetching next question: ' + err.message);
-    document.getElementById('next-btn').disabled = false;
-  }
+  const messageText = document.createElement("p");
+  messageText.textContent = "If you need immediate help or support, please click the button below:";
+  container.appendChild(messageText);
+
+  const button = document.createElement("button");
+  button.textContent = "Get Help";
+  button.style.padding = "8px 12px";
+  button.style.fontSize = "1rem";
+  button.style.cursor = "pointer";
+  button.onclick = () => {
+    window.open("https://suicidepreventionlifeline.org/", "_blank");
+  };
+
+  container.appendChild(button);
+  chatWindow.appendChild(container);
+  chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
-// Submit all answers to backend and display result
-async function submitAnswers() {
-  const answers = conversationHistory.map(qa => qa.answer);
-
-  try {
-    const res = await fetch('http://localhost:3000/score', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ answers })
-    });
-    const result = await res.json();
-
-    // Clear UI elements
-    document.getElementById('question-box').innerHTML = '';
-    document.getElementById('next-btn').style.display = 'none';
-    document.getElementById('text-answer').style.display = 'none';
-    document.getElementById('send-btn').style.display = 'none';
-    document.getElementById('mic-btn').style.display = 'none';
-    document.getElementById('spoken-text').textContent = '';
-
-    const score = result.total ?? 0;
-    const severity = result.result ?? "Unknown";
-
-    document.getElementById('result-box').innerHTML = `
-      <hr style="margin-top:20px; margin-bottom:20px; border:1px solid #cbd5e1;">
-      <h2>Your Score: ${score} / 27</h2>
-      <div class="progress-bar-wrapper" style="width:100%; height:14px; background:#e5e7eb; border-radius:10px; overflow:hidden; margin:10px 0;">
-        <div class="progress-bar" style="width:${(score / 27) * 100}%; height:100%; background:#3b82f6;"></div>
-      </div>
-      <p style="margin-top:10px; font-weight:500;">Severity Level: <strong>${severity}</strong></p>
-    `;
-  } catch (err) {
-    alert('Error submitting answers: ' + err.message);
-  }
+function appendLocalizedHelpButtons() {
+  appendHelpButton();
+  const info = document.createElement("p");
+  info.className = "message system";
+  info.textContent = "In Bangladesh, you can call the National Counseling Helpline at 1098. You may also reach out to organizations like BAMH or BPS.";
+  chatWindow.appendChild(info);
+  chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
-// Fetch follow-up message from backend
-async function getFollowUpMessage(question, answer) {
+function disableInput() {
+  inputBox.disabled = true;
+  micBtn.disabled = true;
+  sendBtn.disabled = true;
+}
+
+async function askForClarification(question, answer) {
   try {
-    const response = await fetch('http://localhost:3000/follow-up', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const res = await fetch("http://localhost:3000/clarify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question, answer })
     });
-    const data = await response.json();
-    return data.message || "";
-  } catch (error) {
-    console.error("Follow-up fetch error:", error);
-    return "";
+    const data = await res.json();
+    return data.clarification;
+  } catch (err) {
+    console.error("Clarify error:", err);
+    return null;
   }
 }
 
-// NEXT button click handler with follow-up message feature
-document.getElementById('next-btn').onclick = async () => {
-  // Disable button to prevent double clicks
-  const nextBtn = document.getElementById('next-btn');
-  nextBtn.disabled = true;
+async function sendUserMessage(userInput) {
+  if (!userInput.trim() || chatEnded) return;
 
-  // Check for selected radio option first
-  const selectedOption = document.querySelector('input[name="option"]:checked');
-  // Get typed answer from fixed text input
-  const typedAnswer = document.getElementById('text-answer').value.trim();
+  appendMessage("user", userInput);
+  conversationHistory.push({ role: "user", content: userInput, time: new Date().toISOString() });
+  inputBox.value = "";
+  spokenText.textContent = "";
 
-  if (!selectedOption && typedAnswer === "") {
-    alert('Please select an option or type an answer.');
-    nextBtn.disabled = false;
+  // 🔴 Step 6: Crisis keyword detection
+  const crisisKeywords = ["kill myself", "suicide", "want to die", "end my life", "hurt myself", "jump", "self-harm"];
+  const isUserCrisis = crisisKeywords.some(word => userInput.toLowerCase().includes(word));
+
+  if (isUserCrisis && !crisisDetected) {
+    crisisDetected = true;
+    chatEnded = true;
+    disableInput();
+
+    const msg1 = "I'm so sorry you're feeling that way. Your safety matters, and you're not alone.";
+    const msg2 = "Please consider reaching out to a mental health professional or a crisis service near you.";
+
+    appendMessage("system", msg1);
+    speakMessage(msg1, { pitch: 0.8, rate: 0.85 });
+    appendMessage("system", msg2);
+    speakMessage(msg2, { pitch: 0.8, rate: 0.85 });
+    appendLocalizedHelpButtons();
+
     return;
   }
 
-  // Determine the user's answer
-  const answer = selectedOption ? parseInt(selectedOption.value) : typedAnswer;
+  try {
+    const res = await fetch("http://localhost:3000/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ history: conversationHistory })
+    });
 
-  // Save current Q&A to conversation history
-  conversationHistory.push({ question: currentQuestion, answer });
+    const data = await res.json();
+    const reply = data.reply || "(No reply)";
 
-  // Clear typed answer input for next question
-  document.getElementById('text-answer').value = '';
+    if (reply.trim().toLowerCase() === "end") {
+      alreadyScored = true;
+      chatEnded = true;
 
-  // Fetch follow-up message
-  const followUpMsg = await getFollowUpMessage(currentQuestion, answer);
+      const hasCrisisWarning = conversationHistory.some(msg =>
+        msg.role === "assistant" && (
+          msg.content.includes("I cannot continue the interview") ||
+          msg.content.includes("seek immediate help") ||
+          msg.content.includes("crisis hotline")
+        )
+      );
 
-  if (followUpMsg) {
-    const questionBox = document.getElementById('question-box');
-    const p = document.createElement('p');
-    p.className = 'follow-up';
-    p.textContent = followUpMsg;
-    questionBox.appendChild(p);
+      if (hasCrisisWarning || crisisDetected) {
+        const msg = "Because of the serious nature of your responses, I’m not generating a PHQ-9 score. Please seek support from a professional right away.";
+        appendMessage("system", msg);
+        speakMessage(msg);
+        appendLocalizedHelpButtons();
+        return;
+      }
 
-    // Wait 2 seconds before fetching the next question
-    setTimeout(() => {
-      fetchNextQuestion();
-    }, 2000);
-  } else {
-    // No follow-up message, just fetch next question immediately
-    fetchNextQuestion();
+      appendMessage("system", "Thank you for completing the interview. Calculating your PHQ-9 score...");
+      speakMessage("Thank you for completing the interview. Calculating your PHQ-9 score...");
+
+      const userAnswers = conversationHistory.filter(msg => msg.role === "user").map(msg => msg.content);
+      console.log("User answers for scoring:", userAnswers);
+
+      const scoreRes = await fetch("http://localhost:3000/score", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ answers: userAnswers })
+      });
+
+      const scoreData = await scoreRes.json();
+      const summary = `Your PHQ-9 score is ${scoreData.total}. Severity level: ${scoreData.result}.`;
+      appendMessage("system", summary);
+      speakMessage(summary);
+      return;
+    }
+
+    appendMessage("system", reply);
+    speakMessage(reply);
+    conversationHistory.push({ role: "assistant", content: reply, time: new Date().toISOString() });
+
+    // Optional: Ask for clarification if user answer vague (you can enable this later)
+    /*
+    if (conversationHistory.length >= 2) {
+      const lastQuestion = conversationHistory[conversationHistory.length - 2].content;
+      const clarification = await askForClarification(lastQuestion, userInput);
+      if (clarification) {
+        appendMessage("system", clarification);
+        speakMessage(clarification);
+        conversationHistory.push({ role: "assistant", content: clarification, time: new Date().toISOString() });
+      }
+    }
+    */
+
+  } catch (err) {
+    appendMessage("system", "Error: " + err.message);
   }
-};
+}
 
-// MIC button and speech recognition: fills #text-answer
-document.getElementById('mic-btn').onclick = () => {
-  if (window.speechSynthesis.speaking) {
-    window.speechSynthesis.cancel();
-  }
-
-  if (!('webkitSpeechRecognition' in window)) {
+micBtn.onclick = () => {
+  if (window.speechSynthesis.speaking) window.speechSynthesis.cancel();
+  if (!("webkitSpeechRecognition" in window)) {
     alert("Speech recognition not supported in this browser.");
     return;
   }
-
   const recognition = new webkitSpeechRecognition();
   recognition.lang = "en-US";
   recognition.interimResults = false;
   recognition.maxAlternatives = 1;
-
-  document.getElementById('listening-dots').style.display = 'block';
+  listeningDots.style.display = "block";
   recognition.start();
-
   recognition.onresult = (event) => {
     const transcript = event.results[0][0].transcript;
-    document.getElementById('spoken-text').textContent = "You said: " + transcript;
-    document.getElementById('text-answer').value = transcript;
-    document.getElementById('listening-dots').style.display = 'none';
+    spokenText.textContent = "You said: " + transcript;
+    inputBox.value = transcript;
+    listeningDots.style.display = "none";
+    sendUserMessage(transcript);
   };
-
   recognition.onerror = (e) => {
-    document.getElementById('listening-dots').style.display = 'none';
+    listeningDots.style.display = "none";
     alert("Speech error: " + e.error);
   };
-
   recognition.onend = () => {
-    document.getElementById('listening-dots').style.display = 'none';
+    listeningDots.style.display = "none";
   };
 };
 
-// SEND button just triggers NEXT button click
-document.getElementById('send-btn').onclick = () => {
-  document.getElementById('next-btn').click();
+sendBtn.onclick = () => {
+  const input = inputBox.value.trim();
+  if (input) sendUserMessage(input);
 };
 
-// ENTER key submits from text input
-document.getElementById('text-answer').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
+inputBox.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
     e.preventDefault();
-    document.getElementById('next-btn').click();
+    const input = inputBox.value.trim();
+    if (input) sendUserMessage(input);
   }
 });
 
-// On page load, start by fetching the first question
-fetchNextQuestion();
-
+window.addEventListener("DOMContentLoaded", () => {
+  const welcome = "Hello, I'm here to understand your mental well-being. Let's start our conversation.";
+  appendMessage("system", welcome);
+  speakMessage(welcome);
+  conversationHistory.push({ role: "assistant", content: welcome, time: new Date().toISOString() });
+});

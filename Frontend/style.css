@@ -14,11 +14,14 @@ body {
 #app {
   background-color: white;
   width: 100%;
-  max-width: 650px;
+  max-width: 700px;
   border-radius: 16px;
   box-shadow: 0 8px 20px rgba(0,0,0,0.1);
   padding: 30px 40px;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  height: 80vh;
 }
 
 h1 {
@@ -49,27 +52,91 @@ input[type="radio"] {
   margin-right: 10px;
 }
 
-/* Input Area - Mic + Text + Send */
-.input-area {
-  display: flex;
-  align-items: center;
-  margin-top: 20px;
+/* Chat Container */
+#chat-container {
+  flex: 1;
+  background: #f8fafc;
   border: 1px solid #cbd5e1;
-  border-radius: 25px;
-  padding: 5px 10px;
-  background-color: #f8fafc;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-#text-answer {
-  border: none;
-  outline: none;
-  flex: 1;
-  padding: 10px;
-  font-size: 16px;
+/* Chat Window: messages scroll here */
+#chat-window {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding-right: 10px;
+  margin-bottom: 15px;
+  scrollbar-width: thin;
+  scrollbar-color: #a5b4fc transparent;
+}
+
+/* Custom scrollbar for WebKit browsers */
+#chat-window::-webkit-scrollbar {
+  width: 8px;
+}
+#chat-window::-webkit-scrollbar-track {
   background: transparent;
+}
+#chat-window::-webkit-scrollbar-thumb {
+  background-color: #a5b4fc;
+  border-radius: 10px;
+  border: 2px solid transparent;
+}
+
+/* Chat messages */
+.message {
+  padding: 10px 14px;
+  border-radius: 14px;
+  margin: 5px 0;
+  max-width: 80%;
+  font-size: 15px;
+  line-height: 1.4;
+  word-wrap: break-word;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
+}
+
+/* System message bubble */
+.system {
+  background: #e0f2fe;
+  align-self: flex-start;
+  color: #1e40af;
+  border-bottom-left-radius: 2px;
+}
+
+/* User message bubble */
+.user {
+  background: #c7f7d2;
+  align-self: flex-end;
+  color: #065f46;
+  border-bottom-right-radius: 2px;
+}
+
+/* Input Area - Mic + Text + Send */
+#input-area {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+/* Text input */
+#text-answer {
+  flex: 1;
+  padding: 10px 15px;
+  border: 1px solid #94a3b8;
+  border-radius: 8px;
+  font-size: 16px;
+  outline: none;
+  background: white;
+  transition: border-color 0.2s ease;
+}
+
+#text-answer:focus {
+  border-color: #3b82f6;
 }
 
 /* Icon buttons for mic & send */
@@ -83,6 +150,8 @@ input[type="radio"] {
   height: 36px;
   border-radius: 50%;
   padding: 4px;
+  background-color: transparent;
+  border: none;
   transition: background-color 0.2s ease;
 }
 
@@ -98,55 +167,13 @@ input[type="radio"] {
   fill: #3b82f6;
 }
 
-/* Compact circular NEXT button */
-/* Updated Next button style */
-#next-btn {
-  margin: 20px auto 0;
-  display: block;
-  width: 120px;           /* rectangular width */
-  height: 40px;           /* rectangular height */
-  border-radius: 8px;     /* rounded corners */
-  font-size: 16px;
-  background-color: #1e40af; /* navy blue */
-  color: white;
-  border: none;
-  cursor: pointer;
-  font-weight: 600;
-  transition: background-color 0.3s ease;
-  text-align: center;
-  line-height: 40px;      /* vertically center text */
-}
-
-#next-btn:hover {
-  background-color: #1e3a8a; /* slightly lighter navy on hover */
-}
-
-#spoken-text {
-  margin-top: 12px;
-  font-style: italic;
-  color: #475569;
-}
-
-#result-box {
-  text-align: center;
-  margin-top: 25px;
-}
-
-#result-box h2 {
-  color: #1e40af;
-}
-#mic-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-right: 8px;
-}
-
+/* Listening dots animation */
 .dots {
   font-size: 18px;
   color: #3b82f6;
   animation: blink 1s infinite;
   margin-top: 2px;
+  user-select: none;
 }
 
 @keyframes blink {
@@ -154,6 +181,47 @@ input[type="radio"] {
   50% { opacity: 1; }
   100% { opacity: 0.2; }
 }
+
+/* Spoken text below input */
+#spoken-text {
+  margin-top: 12px;
+  font-style: italic;
+  color: #475569;
+  min-height: 24px;
+}
+
+/* Result box */
+#result-box {
+  text-align: center;
+  margin-top: 25px;
+  font-weight: 600;
+  font-size: 18px;
+  color: #1e40af;
+}
+
+/* Next button */
+#next-btn {
+  margin: 20px auto 0;
+  display: block;
+  width: 120px;
+  height: 40px;
+  border-radius: 8px;
+  font-size: 16px;
+  background-color: #1e40af;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+  text-align: center;
+  line-height: 40px;
+}
+
+#next-btn:hover {
+  background-color: #1e3a8a;
+}
+
+/* Progress bar */
 .progress-bar-wrapper {
   background-color: #e5e7eb;
   border-radius: 10px;
@@ -170,6 +238,7 @@ input[type="radio"] {
   transition: width 0.4s ease;
 }
 
+/* Follow-up question style */
 .follow-up {
   margin-top: 10px;
   font-style: italic;
@@ -178,9 +247,38 @@ input[type="radio"] {
   padding: 8px;
   border-radius: 6px;
 }
+
+/* Logo container (if used) */
 .logo-svg {
   margin-bottom: 20px;
   display: flex;
   justify-content: center;
   align-items: center;
+}
+.message {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.bubble {
+  background-color: #f0f0f0;
+  border-radius: 12px;
+  padding: 10px;
+  display: inline-block;
+  max-width: 70%;
+}
+
+.message.system .bubble {
+  background-color: #e0f7fa;
+}
+
+.message.user .bubble {
+  background-color: #dcedc8;
+  align-self: flex-end;
+}
+
+.timestamp {
+  font-size: 0.75rem;
+  color: #777;
+  margin-left: 8px;
 }
