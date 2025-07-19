@@ -14,12 +14,13 @@
 
     body {
       font-family: 'Inter', sans-serif;
-      background: linear-gradient(to bottom right, #e0f2fe, #f0f9ff);
+      background: linear-gradient(135deg, #a8c0ff, #3f87f5);
       min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      padding: 40px 20px;
+      padding: 20px;
+      overflow: hidden;
     }
 
     .container {
@@ -31,6 +32,12 @@
       width: 100%;
       text-align: center;
       animation: fadeIn 0.8s ease-in-out;
+      transition: all 0.3s ease-in-out;
+    }
+
+    .container:hover {
+      transform: scale(1.05);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
     }
 
     h1 {
@@ -54,11 +61,16 @@
       border: none;
       border-radius: 10px;
       cursor: pointer;
-      transition: background 0.3s ease;
+      transition: background 0.3s ease, transform 0.2s ease;
     }
 
     button:hover {
       background: #2563eb;
+      transform: translateY(-3px);
+    }
+
+    button:active {
+      transform: translateY(0);
     }
 
     .logo {
@@ -88,27 +100,59 @@
         font-size: 1.7rem;
       }
     }
+
   </style>
 </head>
 <body>
 
   <div class="container">
     <div class="logo-svg">
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" fill="#3b82f6">
-    <circle cx="32" cy="32" r="30" fill="#bfdbfe"/>
-    <path d="M32 12c-6.6 0-12 5.4-12 12 0 4.5 2.5 8.4 6.2 10.5L25 48l7-5 7 5-1.2-13.5c3.7-2.1 6.2-6 6.2-10.5 0-6.6-5.4-12-12-12z" fill="#2563eb"/>
-  </svg>
-</div>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" fill="#3b82f6">
+        <circle cx="32" cy="32" r="30" fill="#bfdbfe"/>
+        <path d="M32 12c-6.6 0-12 5.4-12 12 0 4.5 2.5 8.4 6.2 10.5L25 48l7-5 7 5-1.2-13.5c3.7-2.1 6.2-6 6.2-10.5 0-6.6-5.4-12-12-12z" fill="#2563eb"/>
+      </svg>
+    </div>
 
     <h1>Welcome to MindCare</h1>
+    <p id="greeting">Hello, Good Morning</p>
     <p>Your mental well-being matters. This short interview will help assess your current emotional state using the PHQ-9 tool.</p>
-    <button onclick="startInterview()">Start Interview</button>
+    
+    <!-- Conditionally render buttons based on login status -->
+    <button id="startInterviewBtn" style="display: none;" onclick="startInterview()">Start Interview</button>
+    <button id="loginBtn" onclick="window.location.href='auth.html'">Login</button>
+    <button id="signupBtn" onclick="window.location.href='auth.html'">Sign Up</button>
   </div>
 
   <script>
+    // Check if the user is already logged in
+    function checkLoginStatus() {
+      const token = localStorage.getItem("token");
+      if (token) {
+        // If the user is logged in, show the "Start Interview" button and hide login/signup buttons
+        document.getElementById('startInterviewBtn').style.display = 'block';
+        document.getElementById('loginBtn').style.display = 'none';
+        document.getElementById('signupBtn').style.display = 'none';
+      }
+    }
+
+    // Get dynamic greeting based on the time of the day
+    function getGreeting() {
+      const now = new Date();
+      const hour = now.getHours();
+      if (hour < 12) return "Good Morning";
+      if (hour < 18) return "Good Afternoon";
+      return "Good Evening";
+    }
+
     function startInterview() {
       window.location.href = "index.html";
     }
+
+    // Update the greeting dynamically on page load
+    document.getElementById("greeting").innerText = `${getGreeting()}`;
+
+    // Check login status when the page loads
+    window.onload = checkLoginStatus;
   </script>
 
 </body>

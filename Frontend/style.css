@@ -13,15 +13,15 @@ body {
 
 #app {
   background-color: white;
-  width: 100%;
-  max-width: 700px;
+  width: 95%; /* was 100% */
+  max-width: 900px; /* was 700px */
   border-radius: 16px;
   box-shadow: 0 8px 20px rgba(0,0,0,0.1);
   padding: 30px 40px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  height: 80vh;
+  height: 85vh; /* slightly taller */
 }
 
 h1 {
@@ -30,29 +30,40 @@ h1 {
   margin-bottom: 20px;
 }
 
-h3 {
-  color: #111827;
-}
-
-label {
-  display: block;
-  background: #f1f5f9;
-  padding: 10px 15px;
-  border-radius: 8px;
-  margin: 10px 0;
+#logout-btn {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
+  font-weight: bold;
   cursor: pointer;
-  transition: background 0.3s;
 }
 
-label:hover {
-  background: #e2e8f0;
+#logout-btn:hover {
+  background: #dc2626;
 }
 
-input[type="radio"] {
-  margin-right: 10px;
+#view-history-btn {
+  display: block;
+  margin: 20px auto;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  text-align: center;
 }
 
-/* Chat Container */
+#view-history-btn:hover {
+  background: #2563eb;
+}
+
 #chat-container {
   flex: 1;
   background: #f8fafc;
@@ -64,7 +75,6 @@ input[type="radio"] {
   overflow: hidden;
 }
 
-/* Chat Window: messages scroll here */
 #chat-window {
   flex-grow: 1;
   overflow-y: auto;
@@ -74,20 +84,16 @@ input[type="radio"] {
   scrollbar-color: #a5b4fc transparent;
 }
 
-/* Custom scrollbar for WebKit browsers */
 #chat-window::-webkit-scrollbar {
   width: 8px;
 }
-#chat-window::-webkit-scrollbar-track {
-  background: transparent;
-}
+
 #chat-window::-webkit-scrollbar-thumb {
   background-color: #a5b4fc;
   border-radius: 10px;
   border: 2px solid transparent;
 }
 
-/* Chat messages */
 .message {
   padding: 10px 14px;
   border-radius: 14px;
@@ -97,9 +103,9 @@ input[type="radio"] {
   line-height: 1.4;
   word-wrap: break-word;
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
+  position: relative;
 }
 
-/* System message bubble */
 .system {
   background: #e0f2fe;
   align-self: flex-start;
@@ -107,7 +113,6 @@ input[type="radio"] {
   border-bottom-left-radius: 2px;
 }
 
-/* User message bubble */
 .user {
   background: #c7f7d2;
   align-self: flex-end;
@@ -115,7 +120,6 @@ input[type="radio"] {
   border-bottom-right-radius: 2px;
 }
 
-/* Input Area - Mic + Text + Send */
 #input-area {
   display: flex;
   gap: 10px;
@@ -123,7 +127,6 @@ input[type="radio"] {
   margin-top: 10px;
 }
 
-/* Text input */
 #text-answer {
   flex: 1;
   padding: 10px 15px;
@@ -139,7 +142,6 @@ input[type="radio"] {
   border-color: #3b82f6;
 }
 
-/* Icon buttons for mic & send */
 #mic-btn,
 #send-btn {
   cursor: pointer;
@@ -167,7 +169,6 @@ input[type="radio"] {
   fill: #3b82f6;
 }
 
-/* Listening dots animation */
 .dots {
   font-size: 18px;
   color: #3b82f6;
@@ -182,7 +183,6 @@ input[type="radio"] {
   100% { opacity: 0.2; }
 }
 
-/* Spoken text below input */
 #spoken-text {
   margin-top: 12px;
   font-style: italic;
@@ -190,7 +190,6 @@ input[type="radio"] {
   min-height: 24px;
 }
 
-/* Result box */
 #result-box {
   text-align: center;
   margin-top: 25px;
@@ -199,86 +198,82 @@ input[type="radio"] {
   color: #1e40af;
 }
 
-/* Next button */
-#next-btn {
-  margin: 20px auto 0;
-  display: block;
-  width: 120px;
-  height: 40px;
-  border-radius: 8px;
-  font-size: 16px;
-  background-color: #1e40af;
-  color: white;
-  border: none;
-  cursor: pointer;
-  font-weight: 600;
-  transition: background-color 0.3s ease;
-  text-align: center;
-  line-height: 40px;
-}
+/* ===================== */
+/* 🔥 Chat History Styles */
+/* ===================== */
 
-#next-btn:hover {
-  background-color: #1e3a8a;
-}
-
-/* Progress bar */
-.progress-bar-wrapper {
-  background-color: #e5e7eb;
+#chat-history {
+  margin-top: 20px;
+  background: #f9fafb;
   border-radius: 10px;
-  width: 100%;
-  height: 20px;
-  overflow: hidden;
-  margin-top: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.05);
+  padding: 15px;
+  max-height: 350px;
+  overflow-y: auto;
 }
 
-.progress-bar {
-  height: 100%;
-  background: linear-gradient(to right, #1e3a8a, #3b82f6);
-  border-radius: 10px 0 0 10px;
-  transition: width 0.4s ease;
-}
-
-/* Follow-up question style */
-.follow-up {
-  margin-top: 10px;
-  font-style: italic;
-  color: #2563eb;
-  background-color: #e0e7ff;
-  padding: 8px;
-  border-radius: 6px;
-}
-
-/* Logo container (if used) */
-.logo-svg {
-  margin-bottom: 20px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.message {
-  position: relative;
-  margin-bottom: 12px;
-}
-
-.bubble {
-  background-color: #f0f0f0;
-  border-radius: 12px;
+.conversation {
+  border: 1px solid #d1d5db;
+  background: #fff;
+  border-radius: 8px;
   padding: 10px;
-  display: inline-block;
-  max-width: 70%;
+  margin-bottom: 10px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.message.system .bubble {
-  background-color: #e0f7fa;
+.conversation:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
-.message.user .bubble {
-  background-color: #dcedc8;
-  align-self: flex-end;
+.conversation strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #1e40af;
+}
+
+.conversation .user {
+  color: #065f46;
+  background: #d1fae5;
+  border-radius: 8px;
+  padding: 6px;
+  margin: 3px 0;
+}
+
+.conversation .system {
+  color: #1e3a8a;
+  background: #dbeafe;
+  border-radius: 8px;
+  padding: 6px;
+  margin: 3px 0;
 }
 
 .timestamp {
+  display: block;
   font-size: 0.75rem;
-  color: #777;
-  margin-left: 8px;
+  color: #6b7280;
+  margin-top: 3px;
+  text-align: right;
+}
+
+#chat-history::-webkit-scrollbar {
+  width: 6px;
+}
+
+#chat-history::-webkit-scrollbar-thumb {
+  background: #93c5fd;
+  border-radius: 4px;
+}
+
+button.delete-btn {
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button.delete-btn:hover {
+  background-color: #dc2626;
 }

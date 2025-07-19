@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login | MindCare</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to bottom right, #e0f2fe, #f0f9ff);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .auth-container {
+      background: #fff;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+    }
+    h2 { margin-bottom: 20px; color: #1e293b; }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    button:hover { background-color: #2563eb; }
+    .toggle-form {
+      margin-top: 15px;
+      font-size: 0.9rem;
+    }
+    .toggle-form a {
+      color: #3b82f6;
+      text-decoration: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="auth-container" id="loginForm">
+    <h2>Login</h2>
+    <input type="email" id="loginEmail" placeholder="Email" />
+    <input type="password" id="loginPassword" placeholder="Password" />
+    <button onclick="loginUser()">Login</button>
+    <div class="toggle-form">
+      Don't have an account? <a onclick="toggleForm('signup')">Sign up</a>
+    </div>
+  </div>
+
+  <div class="auth-container" id="signupForm" style="display: none;">
+    <h2>Sign Up</h2>
+    <input type="text" id="signupName" placeholder="Full Name" />
+    <input type="email" id="signupEmail" placeholder="Email" />
+    <input type="password" id="signupPassword" placeholder="Password" />
+    <button onclick="signupUser()">Sign Up</button>
+    <div class="toggle-form">
+      Already have an account? <a onclick="toggleForm('login')">Login</a>
+    </div>
+  </div>
+
+  <script>
+    const BACKEND_URL = "http://localhost:5000"; // Update if needed
+
+    function toggleForm(form) {
+      document.getElementById('loginForm').style.display = (form === 'login') ? 'block' : 'none';
+      document.getElementById('signupForm').style.display = (form === 'signup') ? 'block' : 'none';
+    }
+
+    async function loginUser() {
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value.trim();
+
+      if (!email || !password) {
+        alert("Please enter email and password.");
+        return;
+      }
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          localStorage.setItem("token", data.token); // ✅ Save JWT
+          localStorage.setItem("name", data.name);   // Save user name
+          alert("✅ Login successful!");
+          window.location.href = "index.html"; // Redirect to chat
+        } else {
+          alert(`❌ Login failed: ${data.error}`);
+        }
+      } catch (err) {
+        alert("❌ Login error: " + err.message);
+      }
+    }
+
+    async function signupUser() {
+      const name = document.getElementById("signupName").value.trim();
+      const email = document.getElementById("signupEmail").value.trim();
+      const password = document.getElementById("signupPassword").value.trim();
+
+      if (!name || !email || !password) {
+        alert("Please fill in all fields.");
+        return;
+      }
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/signup`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, password })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          alert("✅ Signup successful! Please log in.");
+          toggleForm("login"); // ✅ Automatically switch to login form
+        } else {
+          alert(`❌ Signup failed: ${data.error}`);
+        }
+      } catch (err) {
+        alert("❌ Signup error: " + err.message);
+      }
+    }
+  </script>
+</body>
+</html>

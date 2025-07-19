@@ -1,192 +1,201 @@
-const express = require('express');
-const cors = require('cors');
-const axios = require('axios');
-const phq9 = require('./phq9');
+// server.js (with improved crisis detection + dynamic start)
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const axios = require("axios");
 
 const app = express();
+const PORT = 5000;
+const JWT_SECRET = "your-secret-key";  // Use dotenv in production
+const OLLAMA_URL = "http://localhost:11434/api/chat";
+
 app.use(cors());
 app.use(express.json());
 
-const PORT = 3000;
+// ✅ MongoDB connection
+mongoose.connect("mongodb+srv://minhajulislamrimon28:vb3ZKLqxjaiZRVXB@cluster0.fpjdx66.mongodb.net/mindcare?retryWrites=true&w=majority")
+  .then(() => console.log("✅ Connected to MongoDB"))
+  .catch(err => console.error("❌ MongoDB error:", err));
 
-// Query Ollama to score an answer
-async function queryOllama(question, answer) {
-  const prompt = `
-You are an expert evaluator scoring answers to PHQ-9 depression questionnaire items.
 
-Given the question:
-"${question}"
+const User = mongoose.model("User", new mongoose.Schema({
+  name: String,
+  email: { type: String, unique: true },
+  password: String
+}));
+const Chat = mongoose.model("Chat", new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  messages: [{ role: String, content: String, timestamp: { type: Date, default: Date.now } }],
+  crisisDetected: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now }
+}));
 
-And the user's answer:
-"${answer}"
+function verifyToken(req, res, next) {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(401).json({ error: "No token provided" });
+  try {
+    req.user = jwt.verify(token, JWT_SECRET);
+    next();
+  } catch {
+    return res.status(401).json({ error: "Invalid token" });
+  }
+}
 
-Please respond ONLY with a single digit from 0 to 3 indicating the severity, where:
+// ✅ Signup
+app.post("/api/signup", async (req, res) => {
+  try {
+    const hashedPassword = await bcrypt.hash(req.body.password, 10);
+    await User.create({ ...req.body, password: hashedPassword });
+    res.status(201).json({ message: "✅ User created" });
+  } catch {
+    res.status(400).json({ error: "Email already in use" });
+  }
+});
+
+// ✅ Login
+app.post("/api/login", async (req, res) => {
+  const user = await User.findOne({ email: req.body.email });
+  if (!user || !(await bcrypt.compare(req.body.password, user.password)))
+    return res.status(401).json({ error: "Invalid credentials" });
+  const token = jwt.sign({ userId: user._id, name: user.name }, JWT_SECRET, { expiresIn: "1d" });
+  res.json({ token, name: user.name });
+});
+
+// ✅ Chat endpoint
+app.post("/api/chat", verifyToken, async (req, res) => {
+  const history = req.body.history || [];
+  
+  // 📝 Retrieve latest chat for this user
+  let latestChat = await Chat.findOne({ userId: req.user.userId }).sort({ createdAt: -1 });
+
+  // 🚨 Reset crisisDetected flag when starting a new conversation (if no previous chat or if flag is set)
+  if (latestChat && latestChat.crisisDetected) {
+    // Manually reset the crisisDetected flag to false
+    latestChat.crisisDetected = false;
+    await latestChat.save(); // save the reset flag
+  }
+
+  // 🟢 Start dynamic conversation if no history
+  if (history.length === 0) {
+    const introMessage = "Hello, I’m your mental health assistant. Let’s start a short PHQ-9 interview.";
+    const firstQuestion = "Over the past 2 weeks, how often have you felt little interest or pleasure in doing things?";
+    await Chat.create({
+      userId: req.user.userId,
+      messages: [
+        { role: "assistant", content: introMessage },
+        { role: "assistant", content: firstQuestion }
+      ]
+    });
+    return res.json({ reply: `${introMessage} ${firstQuestion}` });
+  }
+
+  // 🚨 Crisis Detection (check all user inputs)
+  const crisisKeywords = /(kill myself|suicide|end my life|want to die|hurt myself|self harm)/i;
+  const userMessages = history.filter(msg => msg.role === "user");
+  const crisisDetected = userMessages.some(msg => crisisKeywords.test(msg.content));
+
+  if (crisisDetected) {
+    const crisisReply = "⚠️ It sounds like you may be in crisis. Please seek help immediately: https://findahelpline.com";
+    await Chat.create({
+      userId: req.user.userId,
+      messages: history.concat({ role: "assistant", content: crisisReply }),
+      crisisDetected: true // Set flag here after detecting crisis
+    });
+    return res.json({ reply: crisisReply });
+  }
+
+  // 🌱 Continue interview (no crisis detected)
+  const response = await axios.post(OLLAMA_URL, {
+    model: "llama3",
+    stream: false,
+    messages: [
+      {
+        role: "system",
+        content: `
+You are a compassionate PHQ-9 interviewer.
+
+- Ask ONE question at a time based on the user's last answer.
+- Respond with "END" when the interview is complete.
+- Avoid long summaries or advice.
+        `.trim(),
+      },
+      ...history
+    ]
+  });
+
+  let reply = response.data.message?.content?.trim() || "(No response)";
+
+  // ✅ Auto score on END
+  if (reply.includes("END")) {
+    let totalScore = 0;
+    let userAnswers = history.filter(msg => msg.role === "user");
+    for (let i = 0; i < userAnswers.length; i++) {
+      const prompt = `
+Score this PHQ-9 answer from 0-3:
+Q: ${userAnswers[i].content}
 0 = Not at all
 1 = Several days
 2 = More than half the days
 3 = Nearly every day
-
-Do not add any explanations or other text. Just respond with the digit.
-  `.trim();
-
-  try {
-    const response = await axios.post('http://localhost:11434/api/chat', {
-      model: 'llama3',
-      stream: false,
-      messages: [{ role: 'user', content: prompt }]
-    });
-
-    const raw = response.data.message?.content?.trim() || '';
-    console.log("🔎 LLM raw score response:", raw);
-
-    const score = parseInt(raw);
-    if ([0, 1, 2, 3].includes(score)) return score;
-
-    const match = raw.match(/[0-3]/);
-    if (match) return parseInt(match[0]);
-
-    console.warn("⚠️ Unexpected LLM response:", raw);
-    return 0;
-  } catch (err) {
-    console.error("❌ Ollama error:", err.message);
-    return 0;
-  }
-}
-
-// Chat-style conversational endpoint
-app.post('/chat', async (req, res) => {
-  const history = req.body.history;
-  if (!Array.isArray(history)) {
-    return res.status(400).json({ error: "Invalid history format" });
-  }
-
-  // Compassionate system message for empathy/tone moderation
-  const systemMessage = {
-    role: 'system',
-    content: `
-You are a compassionate mental health interviewer conducting a PHQ-9 style depression interview.
-
-- Ask ONE question at a time based on the user's last answer.
-- Use empathetic, warm, and supportive language.
-- Acknowledge the user's feelings respectfully before proceeding.
-- Avoid giving advice, summaries, or commentary.
-- Do NOT simulate or invent user responses.
-- If unsure what to ask next or the interview is complete, respond with "END".
-- If user responses indicate crisis or severe distress, gently suggest seeking immediate professional help and provide support resources.
-- DO NOT include “System:” or “User:” in your message.
-
-Your reply should be ONLY the next question (or "END").
-    `.trim()
-  };
-
-  try {
-    const messages = [systemMessage, ...history];
-    const response = await axios.post('http://localhost:11434/api/chat', {
-      model: 'llama3',
-      stream: false,
-      messages
-    });
-
-    const reply = response.data.message?.content?.trim() || "(No response)";
-    return res.json({ reply });
-  } catch (err) {
-    console.error("❌ Ollama error on chat:", err.message);
-    return res.status(500).json({ error: "LLM request failed" });
-  }
-});
-
-// Clarification endpoint (moved outside /chat)
-app.post('/clarify', async (req, res) => {
-  const { question, answer } = req.body;
-
-  if (!question || !answer) {
-    return res.status(400).json({ error: "Missing question or answer" });
-  }
-
-  const prompt = `
-You are a PHQ-9 interviewer assistant.
-
-You just asked this question:
-"${question}"
-
-The user responded:
-"${answer}"
-
-Determine if the user's answer is vague, unclear, or needs clarification. If yes, respond with a polite clarifying question like "Could you clarify what you mean?" or something specific to the context.
-
-If the answer is already clear, respond ONLY with "OK".
-  `.trim();
-
-  try {
-    const response = await axios.post('http://localhost:11434/api/chat', {
-      model: 'llama3',
-      stream: false,
-      messages: [{ role: 'user', content: prompt }]
-    });
-
-    const content = response.data.message?.content?.trim();
-    if (content === "OK") return res.json({ clarification: null });
-
-    return res.json({ clarification: content });
-  } catch (err) {
-    console.error("❌ Clarify error:", err.message);
-    return res.status(500).json({ error: "Clarification LLM failed" });
-  }
-});
-
-// Traditional PHQ-9 scoring route
-app.post('/score', async (req, res) => {
-  const answers = req.body.answers;
-
-  if (!Array.isArray(answers) || answers.length === 0) {
-    return res.status(400).json({ error: "Invalid or empty answers array" });
-  }
-
-  let totalScore = 0;
-  let answerCount = Math.min(answers.length, phq9.length);
-
-  console.log(`📋 Starting PHQ-9 scoring with ${answerCount} answers`);
-
-  for (let i = 0; i < answerCount; i++) {
-    let question = phq9[i]?.question || `Question ${i + 1}`;
-    let ans = answers[i];
-    let score = 0;
-
-    if (!ans || typeof ans !== 'string' || ans.trim() === "") {
-      console.warn(`⚠️ Empty or missing answer for Q${i + 1}, assigning score 0`);
-      score = 0;
-    } else {
-      const parsed = parseInt(ans.trim());
-      if ([0, 1, 2, 3].includes(parsed)) {
-        score = parsed;
-      } else {
-        // Use LLM to score free text
-        score = await queryOllama(question, ans.trim());
-
-        if (![0, 1, 2, 3].includes(score)) {
-          console.warn(`❗ LLM returned invalid score for Q${i + 1}: "${score}". Using 0 as fallback.`);
-          score = 0;
-        }
-      }
+Only return the digit.`;
+      const scoreRes = await axios.post(OLLAMA_URL, {
+        model: "llama3",
+        stream: false,
+        messages: [{ role: "user", content: prompt }]
+      });
+      const score = parseInt(scoreRes.data.message?.content?.trim());
+      if ([0, 1, 2, 3].includes(score)) totalScore += score;
     }
 
-    console.log(`✅ Q${i + 1}: "${ans}" → Score: ${score}`);
-    totalScore += score;
+    const severity = totalScore >= 20 ? "Severe" :
+      totalScore >= 15 ? "Moderately Severe" :
+      totalScore >= 10 ? "Moderate" :
+      totalScore >= 5 ? "Mild" : "Minimal";
+
+    reply += `
+Thank you for your time!
+PHQ-9 Total Score: ${totalScore}
+📊 Severity: ${severity}
+(This is not a formal diagnosis. Please consult a healthcare professional.)
+`;
   }
 
-  let severity = "Unknown";
-  if (totalScore >= 20) severity = "Severe";
-  else if (totalScore >= 15) severity = "Moderately Severe";
-  else if (totalScore >= 10) severity = "Moderate";
-  else if (totalScore >= 5) severity = "Mild";
-  else severity = "Minimal";
+  // Save chat after processing
+  await Chat.create({
+    userId: req.user.userId,
+    messages: history.concat({ role: "assistant", content: reply })
+  });
 
-  console.log(`🎯 Final Score: ${totalScore} → Severity: ${severity}`);
-
-  return res.json({ total: totalScore, result: severity });
+  // Send the response to the user
+  res.json({ reply });
 });
 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}`);
+
+
+
+// ✅ Chat history
+app.get("/api/chat-history", verifyToken, async (req, res) => {
+  const chats = await Chat.find({ userId: req.user.userId }).sort({ createdAt: -1 });
+  res.json(chats);
 });
+// DELETE Route to delete a chat
+app.delete("/api/chat/:id", verifyToken, async (req, res) => {
+  try {
+    const chatId = req.params.id;
+    const chat = await Chat.findOneAndDelete({ _id: chatId, userId: req.user.userId });
+
+    if (!chat) {
+      return res.status(404).json({ error: "Chat not found" });
+    }
+
+    res.json({ message: "Chat deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting chat:", err);
+    res.status(500).json({ error: "Failed to delete chat" });
+  }
+});
+
+
+app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
