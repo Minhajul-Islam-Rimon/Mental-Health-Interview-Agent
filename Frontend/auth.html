@@ -90,34 +90,36 @@
     }
 
     async function loginUser() {
-      const email = document.getElementById("loginEmail").value.trim();
-      const password = document.getElementById("loginPassword").value.trim();
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value.trim();
 
-      if (!email || !password) {
-        alert("Please enter email and password.");
-        return;
-      }
+  if (!email || !password) {
+    alert("Please enter email and password.");
+    return;
+  }
 
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password })
-        });
-        const data = await res.json();
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
 
-        if (res.ok) {
-          localStorage.setItem("token", data.token); // ✅ Save JWT
-          localStorage.setItem("name", data.name);   // Save user name
-          alert("✅ Login successful!");
-          window.location.href = "index.html"; // Redirect to chat
-        } else {
-          alert(`❌ Login failed: ${data.error}`);
-        }
-      } catch (err) {
-        alert("❌ Login error: " + err.message);
-      }
+    if (res.ok) {
+      localStorage.setItem("token", data.token); // ✅ Save JWT
+      localStorage.setItem("name", data.name);   // Save user name
+      sessionStorage.setItem("justLoggedIn", "true");  // <--- ADD THIS LINE!
+      alert("✅ Login successful!");
+      window.location.href = "index.html"; // Redirect to chat
+    } else {
+      alert(`❌ Login failed: ${data.error}`);
     }
+  } catch (err) {
+    alert("❌ Login error: " + err.message);
+  }
+}
+
 
     async function signupUser() {
       const name = document.getElementById("signupName").value.trim();

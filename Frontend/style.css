@@ -277,3 +277,37 @@ button.delete-btn {
 button.delete-btn:hover {
   background-color: #dc2626;
 }
+/* Navigation Bar (button group at top) */
+.nav {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.nav button {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 9px 22px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s;
+  box-shadow: 0 2px 7px rgba(80,130,238,0.10);
+}
+
+.nav button:hover {
+  background: #1e40af;
+}
+
+#logout-btn {
+  background: #ef4444;
+  margin-left: 18px;
+}
+
+#logout-btn:hover {
+  background: #dc2626;
+}
