@@ -58,25 +58,24 @@ ollama pull llama3
 ollama run llama3
 
 5. Set Up Environment Variables
-Create a .env file in the root directory of your project. In this file, add the following environment variables:
+ Create a .env file in the root directory of your project. In this file, add the following environment variables:
    JWT_SECRET=your-secret-key
    MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/mydatabase?retryWrites=true&w=majority
    
-Replace <username>, <password>, and mydatabase with your MongoDB Atlas credentials and database name.
+  Replace <username>, <password>, and mydatabase with your MongoDB Atlas credentials and database name.
 
 6. Start the Application
-Vs code/any IDE terminal:
-cd Backend
-node server.js
+ Vs code/any IDE terminal:
+ cd Backend
+ node server.js
 
-**in another terminal of vs code(click  + for new terminal )bot health check:
-curl http://localhost:5000/health/ollama
+ **in another terminal of vs code(click  + for new terminal )bot health check:
+ curl http://localhost:5000/health/ollama
 
--->if output of this look like
+ -->if output of this look like
     StatusCode        : 200                                                                                                                                      
     StatusDescription : OK 
--->then the server will response perfectly.
-
+ -->then the server will response perfectly.
 
 7.Final step
 welcome.html, open it as a live server
