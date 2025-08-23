@@ -53,32 +53,31 @@ This will install all the required dependencies for the backend (Node.js, Expres
   You can replace the mongodb+srv:// string in the server.js file with your MongoDB Atlas connection string .
   example:
   
-mongoose.connect("mongodb+srv://<username>:<password>@cluster0.mongodb.net/mydatabase?retryWrites=true&w=majority");
+    mongoose.connect("mongodb+srv://<username>:<password>@cluster0.mongodb.net/mydatabase?retryWrites=true&w=majority");
 
-4. Install Ollama and Set Up LLaMA 3
-5. To use the LLaMA 3 model locally, you need to download and run Ollama. Follow these steps:
+4. Install Ollama and Set Up LLaMA 3. To use the LLaMA 3 model locally, you need to download and run Ollama. Follow these steps:
 Visit the Ollama website and download the app for your operating system.Once installed, open a terminal and run the following command to download the LLaMA 3 model:
 quit ollama app first then step by step follow.
 
 
 cmd1:
 
-set OLLAMA_HOST=127.0.0.1
+    set OLLAMA_HOST=127.0.0.1
 
-ollama serve
+    ollama serve
 
 cmd2:
 
-ollama pull llama3
+    ollama pull llama3
 
-ollama run llama3
+    ollama run llama3
 
 6. Set Up Environment Variables
  Create a .env file in the root directory of your project. In this file, add the following environment variables:
 
-   JWT_SECRET=your-secret-key
+       JWT_SECRET=your-secret-key
    
-   MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/mydatabase?retryWrites=true&w=majority
+       MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/mydatabase?retryWrites=true&w=majority
    
   Replace <username>, <password>, and mydatabase with your MongoDB Atlas credentials and database name.
   
@@ -86,22 +85,22 @@ ollama run llama3
 7. Start the Application
  Vs code/any IDE terminal:
 
- cd Backend
+       cd Backend
 
- node server.js
+       node server.js
 
  **in another terminal of vs code(click  + for new terminal )bot health check:
  
- curl http://localhost:5000/health/ollama
+     curl http://localhost:5000/health/ollama
 
- -->if output of this look like
+ -->if the output of this look like
     StatusCode        : 200                                                                                                                                      
     StatusDescription : OK 
  -->then the server will response perfectly.
 
 8.Final step
 
-welcome.html, open it as a live server
+    welcome.html, open it as a live server
 
  
 
