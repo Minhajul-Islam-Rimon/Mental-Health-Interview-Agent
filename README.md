@@ -44,6 +44,7 @@ Make sure you have Node.js installed. In the project directory, run:
          npm install
          
 This will install all the required dependencies for the backend (Node.js, Express.js, etc.) as listed in package.json.
+
 3. Install MongoDB Dependencies
   Create a free account on MongoDB Atlas
   and create a cluster to store your user data and conversation history. Once the cluster is set up, create a database user and save your connection string.
@@ -55,8 +56,7 @@ This will install all the required dependencies for the backend (Node.js, Expres
 mongoose.connect("mongodb+srv://<username>:<password>@cluster0.mongodb.net/mydatabase?retryWrites=true&w=majority");
 
 4. Install Ollama and Set Up LLaMA 3
-5. 
-To use the LLaMA 3 model locally, you need to download and run Ollama. Follow these steps:
+5. To use the LLaMA 3 model locally, you need to download and run Ollama. Follow these steps:
 Visit the Ollama website and download the app for your operating system.Once installed, open a terminal and run the following command to download the LLaMA 3 model:
 quit ollama app first then step by step follow.
 
@@ -73,7 +73,7 @@ ollama pull llama3
 
 ollama run llama3
 
-5. Set Up Environment Variables
+6. Set Up Environment Variables
  Create a .env file in the root directory of your project. In this file, add the following environment variables:
 
    JWT_SECRET=your-secret-key
@@ -83,7 +83,7 @@ ollama run llama3
   Replace <username>, <password>, and mydatabase with your MongoDB Atlas credentials and database name.
   
 
-6. Start the Application
+7. Start the Application
  Vs code/any IDE terminal:
 
  cd Backend
@@ -99,7 +99,7 @@ ollama run llama3
     StatusDescription : OK 
  -->then the server will response perfectly.
 
-7.Final step
+8.Final step
 
 welcome.html, open it as a live server
 
