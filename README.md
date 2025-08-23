@@ -40,42 +40,58 @@ Before you start, make sure you have the following installed:
 
 2.Install Node.js Dependencies
 Make sure you have Node.js installed. In the project directory, run: 
+
          npm install
+         
 This will install all the required dependencies for the backend (Node.js, Express.js, etc.) as listed in package.json.
 3. Install MongoDB Dependencies
   Create a free account on MongoDB Atlas
   and create a cluster to store your user data and conversation history. Once the cluster is set up, create a database user and save your connection string.
 
+
   You can replace the mongodb+srv:// string in the server.js file with your MongoDB Atlas connection string .
   example:
+  
 mongoose.connect("mongodb+srv://<username>:<password>@cluster0.mongodb.net/mydatabase?retryWrites=true&w=majority");
 
 4. Install Ollama and Set Up LLaMA 3
+5. 
 To use the LLaMA 3 model locally, you need to download and run Ollama. Follow these steps:
 Visit the Ollama website and download the app for your operating system.Once installed, open a terminal and run the following command to download the LLaMA 3 model:
 quit ollama app first then step by step follow.
 
+
 cmd1:
+
 set OLLAMA_HOST=127.0.0.1
+
 ollama serve
 
 cmd2:
+
 ollama pull llama3
+
 ollama run llama3
 
 5. Set Up Environment Variables
  Create a .env file in the root directory of your project. In this file, add the following environment variables:
+
    JWT_SECRET=your-secret-key
+   
    MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/mydatabase?retryWrites=true&w=majority
    
   Replace <username>, <password>, and mydatabase with your MongoDB Atlas credentials and database name.
+  
 
 6. Start the Application
  Vs code/any IDE terminal:
+
  cd Backend
+
  node server.js
 
  **in another terminal of vs code(click  + for new terminal )bot health check:
+ 
  curl http://localhost:5000/health/ollama
 
  -->if output of this look like
@@ -84,6 +100,7 @@ ollama run llama3
  -->then the server will response perfectly.
 
 7.Final step
+
 welcome.html, open it as a live server
 
  
