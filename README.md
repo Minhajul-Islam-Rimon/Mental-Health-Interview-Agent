@@ -27,7 +27,7 @@ Before you start, make sure you have the following installed:
 
 
 
-Installation Setup step by step:
+###Installation Setup step by step:
 1.Open your terminal (or VS Code's terminal) and run the following command to clone the repository:
  git clone https://github.com/yourusername/mental-health-interview-agent.git
  cd mental-health-interview-agent
